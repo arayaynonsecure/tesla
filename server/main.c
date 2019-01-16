@@ -22,7 +22,6 @@ uint8_t global_flags;
 static inline void parse_args(int argc, char* argv[]){
 	register bool notify = true;
 	for(int i = 1; i < argc && i <= MAX_POSS_VALID_ARGC; i++){
-//TODO: "-h --help" needs 2 only gen 1 msg
 		if(!strncmp((const char*)(argv[i]), "-h", 2) ||
 		!strncmp((const char*)(argv[i]), "--help", 6)){
 			puts("Try \"info tesla\"");
