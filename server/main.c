@@ -9,6 +9,7 @@ have received a copy of the GPL with this program. If not, see
 <http://www.gnu.org/licenses/>.*/
 /*#define _REENTRANT
 #include "include/tesla.h"*/
+//#include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -19,8 +20,9 @@ have received a copy of the GPL with this program. If not, see
 
 uint8_t global_flags;
 
-static inline void parse_args(int argc, char* argv[]){
+static inline uint8_t parse_args(int argc, char* argv[]){
 	register bool notify = true;
+	register uint8_t flags = 0;
 	for(int i = 1; i < argc && i <= MAX_POSS_VALID_ARGC; i++){
 		if(!strncmp((const char*)(argv[i]), "-h", 2) ||
 		!strncmp((const char*)(argv[i]), "--help", 6)){
@@ -28,12 +30,12 @@ static inline void parse_args(int argc, char* argv[]){
 			exit(EXIT_SUCCESS);
 		}
 		else if(!strncmp((const char*)(argv[i]), "--config=/", 10)){
-			global_flags |= 0x01;
+			flags |= 0x01;
 			puts("Config file location overridden:");
 			puts((const char*)(argv[i] + 9));
 		}
 		else if(!strncmp((const char*)(argv[i]), "--dataset=/", 11)){
-			global_flags |= 0x02;
+			flags |= 0x02;
 			puts("Default dataset overridden:");
 			puts((const char*)(argv[i] + 10));
 		}
@@ -44,9 +46,10 @@ static inline void parse_args(int argc, char* argv[]){
 			notify = false;
 		}
 	}
+	return flags;
 }
 int main(int argc, char* argv[]){
-	if(argc > 1) parse_args(argc, argv);
+	if(argc > 1) global_flags = parse_args(argc, argv);
 	else puts("No args given, trying default options");
 	exit(EXIT_SUCCESS);
 }
