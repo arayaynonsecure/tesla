@@ -7,9 +7,8 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 or FITNESS FOR A PARTICULAR PURPOSE.  See the GPL for more details. You should
 have received a copy of the GPL with this program. If not, see
 <http://www.gnu.org/licenses/>.*/
-/*#define _REENTRANT
-#include "include/tesla.h"*/
-//#include <signal.h>
+//#include "include/tesla.h"
+#include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -20,16 +19,20 @@ have received a copy of the GPL with this program. If not, see
 
 uint8_t global_flags;
 
-static inline uint8_t parse_args(int argc, char* argv[]){
-	register bool notify = true;
-	register uint8_t flags = 0;
+static inline void check_help(int argc, char* argv[]){
 	for(int i = 1; i < argc && i <= MAX_POSS_VALID_ARGC; i++){
 		if(!strncmp((const char*)(argv[i]), "-h", 2) ||
 		!strncmp((const char*)(argv[i]), "--help", 6)){
 			puts("Try \"info tesla\"");
 			exit(EXIT_SUCCESS);
 		}
-		else if(!strncmp((const char*)(argv[i]), "--config=/", 10)){
+	}
+}
+static inline uint8_t parse_args(int argc, char* argv[]){
+	register bool notify = true;
+	register uint8_t flags = 0;
+	for(int i = 1; i < argc && i <= MAX_POSS_VALID_ARGC; i++){
+		if(!strncmp((const char*)(argv[i]), "--config=/", 10)){
 			flags |= 0x01;
 			puts("Config file location overridden:");
 			puts((const char*)(argv[i] + 9));
@@ -49,6 +52,7 @@ static inline uint8_t parse_args(int argc, char* argv[]){
 	return flags;
 }
 int main(int argc, char* argv[]){
+	check_help(argc, argv);
 	if(argc > 1) global_flags = parse_args(argc, argv);
 	else puts("No args given, trying default options");
 	exit(EXIT_SUCCESS);
