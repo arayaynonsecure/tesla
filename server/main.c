@@ -93,7 +93,7 @@ static inline uint8_t parse_args(int argc, char* argv[]){
 
 int main(int argc, char* argv[]){
 	helpchk(argc, argv);
-	register_handlers(void);
+	register_handlers();
 	if(argc > 1) global_flags = parse_args(argc, argv);
 	else puts("No args given, trying default options");
 	exit(EXIT_SUCCESS);
