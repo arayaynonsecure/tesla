@@ -27,7 +27,6 @@ void handle_sig(int sig){//yes, this is just a baseline
 	switch(sig){
 		case SIGHUP:
 		case SIGINT:
-		case SIGQUIT:
 		case SIGTERM:
 		default:
 		if(isatty(STDIN_FILENO)) tcflush(STDIN_FILENO, TCIFLUSH);
@@ -53,14 +52,12 @@ static inline void register_handlers(void){
 	sigemptyset(&blkmask);
 	sigaddset(&blkmask, SIGHUP);
 	sigaddset(&blkmask, SIGINT);
-	sigaddset(&blkmask, SIGQUIT);
 	sigaddset(&blkmask, SIGTERM);
 	sigstruct.sa_flags = SA_RESTART;
 	sigstruct.sa_handler = handle_sig;
 	sigstruct.sa_mask = blkmask;
 	if(sigaction(SIGHUP, &sigstruct, NULL) == -1) goto err;
 	if(sigaction(SIGINT, &sigstruct, NULL) == -1) goto err;
-	if(sigaction(SIGQUIT, &sigstruct, NULL) == -1) goto err;
 	if(sigaction(SIGTERM, &sigstruct, NULL) == -1) goto err;
 	return;
 err:perror("Signal handler setup failed");
