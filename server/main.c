@@ -7,19 +7,36 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 or FITNESS FOR A PARTICULAR PURPOSE.  See the GPL for more details. You should
 have received a copy of the GPL with this program. If not, see
 <http://www.gnu.org/licenses/>.*/
+//glibc feature test macros?
 //#include "include/tesla.h"
+#include <errno.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
+#include <unistd.h>
 
 #define MAX_POSS_VALID_ARGC 4
 
 uint8_t global_flags;
 
-static inline void check_help(int argc, char* argv[]){
+void handle_sig(int sig){//yes, this is just a baseline
+	switch(sig){
+		case SIGHUP:
+		case SIGINT:
+		case SIGTERM:
+		default:
+		if(isatty(STDIN_FILENO)) tcflush(STDIN_FILENO, TCIFLUSH);
+		if(isatty(STDOUT_FILENO)) tcdrain(STDOUT_FILENO);
+		if(isatty(STDERR_FILENO)) tcdrain(STDERR_FILENO);
+		_exit(EXIT_SUCCESS);
+	}
+}
+
+static inline void helpchk(int argc, char* argv[]){
 	for(int i = 1; i < argc && i <= MAX_POSS_VALID_ARGC; i++){
 		if(!strncmp((const char*)(argv[i]), "-h", 2) ||
 		!strncmp((const char*)(argv[i]), "--help", 6)){
@@ -28,6 +45,25 @@ static inline void check_help(int argc, char* argv[]){
 		}
 	}
 }
+
+static inline void register_handlers(void){
+	struct sigaction sigstruct;
+	sigset_t blkmask;
+	sigemptyset(&blkmask);
+	sigaddset(&blkmask, SIGHUP);
+	sigaddset(&blkmask, SIGINT);
+	sigaddset(&blkmask, SIGTERM);
+	sigstruct.sa_flags = SA_RESTART;
+	sigstruct.sa_handler = handle_sig;
+	sigstruct.sa_mask = blkmask;
+	if(sigaction(SIGHUP, &sigstruct, NULL) == -1) goto err;
+	if(sigaction(SIGINT, &sigstruct, NULL) == -1) goto err;
+	if(sigaction(SIGTERM, &sigstruct, NULL) == -1) goto err;
+	return;
+err:perror("Signal handler setup failed");
+	exit(EXIT_FAILURE);
+}
+
 static inline uint8_t parse_args(int argc, char* argv[]){
 	register bool notify = true;
 	register uint8_t flags = 0;
@@ -51,8 +87,10 @@ static inline uint8_t parse_args(int argc, char* argv[]){
 	}
 	return flags;
 }
+
 int main(int argc, char* argv[]){
-	check_help(argc, argv);
+	helpchk(argc, argv);
+	register_handlers();
 	if(argc > 1) global_flags = parse_args(argc, argv);
 	else puts("No args given, trying default options");
 	exit(EXIT_SUCCESS);
