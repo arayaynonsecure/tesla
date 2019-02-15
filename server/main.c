@@ -8,7 +8,6 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GPL for more details. You should
 have received a copy of the GPL with this program. If not, see
 <http://www.gnu.org/licenses/>.*/
 //glibc feature test macros?
-//#include "include/tesla.h"
 #include <errno.h>
 #include <signal.h>
 #include <stdbool.h>
