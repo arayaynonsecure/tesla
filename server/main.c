@@ -23,23 +23,23 @@ have received a copy of the GPL with this program. If not, see
 uint8_t global_flags;
 volatile uint8_t sigflags;
 
-void handl_alrm(void){
+void handl_alrm(int sig){
 	sigflags &= 0xFE;
 }
 
-void clean_exit(void){
+void clean_exit(int sig){
 	if(isatty(STDIN_FILENO)) tcflush(STDIN_FILENO, TCIFLUSH);
 	if(isatty(STDOUT_FILENO)) tcdrain(STDOUT_FILENO);
 	if(isatty(STDERR_FILENO)) tcdrain(STDERR_FILENO);
 	_exit(EXIT_SUCCESS);
 }
 
-void chk_dbl(void){
+void chk_dbl(int sig){
 	if(!(sigflags & 0x01)){
 	    sigflags |= 0x01;
 	    alarm(1U);
 	}
-	else clean_exit();
+	else clean_exit(sig);
 }
 
 static inline void helpchk(int argc, char* argv[]){
