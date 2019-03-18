@@ -8,7 +8,6 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GPL for more details. You should
 have received a copy of the GPL with this program. If not, see
 <http://www.gnu.org/licenses/>.*/
 //glibc feature test macros?
-//#include "include/tesla.h"
 #include <errno.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -22,18 +21,25 @@ have received a copy of the GPL with this program. If not, see
 #define MAX_POSS_VALID_ARGC 4
 
 uint8_t global_flags;
+volatile uint8_t sigflags;
 
-void handle_sig(int sig){//yes, this is just a baseline
-	switch(sig){
-		case SIGHUP:
-		case SIGINT:
-		case SIGTERM:
-		default:
-		if(isatty(STDIN_FILENO)) tcflush(STDIN_FILENO, TCIFLUSH);
-		if(isatty(STDOUT_FILENO)) tcdrain(STDOUT_FILENO);
-		if(isatty(STDERR_FILENO)) tcdrain(STDERR_FILENO);
-		_exit(EXIT_SUCCESS);
+void handl_alrm(void){
+	sigflags &= 0xFE;
+}
+
+void clean_exit(void){
+	if(isatty(STDIN_FILENO)) tcflush(STDIN_FILENO, TCIFLUSH);
+	if(isatty(STDOUT_FILENO)) tcdrain(STDOUT_FILENO);
+	if(isatty(STDERR_FILENO)) tcdrain(STDERR_FILENO);
+	_exit(EXIT_SUCCESS);
+}
+
+void chk_dbl(void){
+	if(!(sigflags & 0x01)){
+	    sigflags |= 0x01;
+	    alarm(1U);
 	}
+	else clean_exit();
 }
 
 static inline void helpchk(int argc, char* argv[]){
@@ -50,15 +56,23 @@ static inline void register_handlers(void){
 	struct sigaction sigstruct;
 	sigset_t blkmask;
 	sigemptyset(&blkmask);
+	sigaddset(&blkmask, SIGALRM);
 	sigaddset(&blkmask, SIGHUP);
 	sigaddset(&blkmask, SIGINT);
+	sigaddset(&blkmask, SIGQUIT);
 	sigaddset(&blkmask, SIGTERM);
+	sigaddset(&blkmask, SIGTSTP);
 	sigstruct.sa_flags = SA_RESTART;
-	sigstruct.sa_handler = handle_sig;
 	sigstruct.sa_mask = blkmask;
+	sigstruct.sa_handler = handl_alrm;
+	if(sigaction(SIGALRM, &sigstruct, NULL) == -1) goto err;
+	sigstruct.sa_handler = clean_exit;
 	if(sigaction(SIGHUP, &sigstruct, NULL) == -1) goto err;
-	if(sigaction(SIGINT, &sigstruct, NULL) == -1) goto err;
 	if(sigaction(SIGTERM, &sigstruct, NULL) == -1) goto err;
+	sigstruct.sa_handler = chk_dbl;
+	if(sigaction(SIGINT, &sigstruct, NULL) == -1) goto err;
+	if(sigaction(SIGQUIT, &sigstruct, NULL) == -1) goto err;
+	if(sigaction(SIGTSTP, &sigstruct, NULL) == -1) goto err;
 	return;
 err:perror("Signal handler setup failed");
 	exit(EXIT_FAILURE);
