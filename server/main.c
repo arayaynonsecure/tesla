@@ -18,10 +18,7 @@ have received a copy of the GPL with this program. If not, see
 
 uint8_t global_flags;
 
-//declarations for signal handling
-void handl_alrm(int sig);
-void clean_exit(int sig);
-void chk_dbl(int sig);
+//void clean_exit(int sig);
 void register_handlers(void);
 
 static inline void helpchk(int argc, char* argv[]){
