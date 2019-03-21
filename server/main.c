@@ -39,6 +39,8 @@ void chk_dbl(int sig){
 	    sigflags |= 0x01;
 	    alarm(1U);
 	}
+/*Note that the first signal received **need not** be SIGTSTP*/
+	else if(sig == SIGTSTP) raise(SIGSTOP);
 	else clean_exit(sig);
 }
 
