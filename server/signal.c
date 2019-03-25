@@ -30,13 +30,24 @@ void clean_exit(int sig){
 }
 
 void chk_dbl(int sig){
+//Bit 0 is a flag whether a tty sig was received in the past second
 	if(!(sigflags & 0x01)){
 	    sigflags |= 0x01;
 	    alarm(1U);
 	}
-/*Note that the first signal received **need not** be SIGTSTP*/
-	else if(sig == SIGTSTP) raise(SIGSTOP);
-	else clean_exit(sig);
+//Note that we only check # of this sig, so e.g. ^C^Z will stop.
+	else switch(sig){
+		case SIGINT:
+			clean_exit(sig);
+			break;
+		case SIGQUIT:
+			abort();
+			break;
+		case SIGTSTP:
+			raise(SIGSTOP);
+			break;
+		default: clean_exit(sig);
+	}
 }
 
 void register_handlers(void){
