@@ -1,4 +1,4 @@
-/*(c) 2018-19 Aryeh Klempner <arayaydev@gmail.com>
+/*(c) 2019 Aryeh Klempner <arayaydev@gmail.com>
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License (GPL) as published by the Free
 Software Foundation, either version 3 of the GPL, or (at your option) any
