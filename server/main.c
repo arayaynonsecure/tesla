@@ -7,40 +7,19 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 or FITNESS FOR A PARTICULAR PURPOSE.  See the GPL for more details. You should
 have received a copy of the GPL with this program. If not, see
 <http://www.gnu.org/licenses/>.*/
-//glibc feature test macros?
-#include <errno.h>
-#include <signal.h>
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
-#include <unistd.h>
 
 #define MAX_POSS_VALID_ARGC 4
 
 uint8_t global_flags;
-volatile uint8_t sigflags;
 
-void handl_alrm(void){
-	sigflags &= 0xFE;
-}
-
-void clean_exit(void){
-	if(isatty(STDIN_FILENO)) tcflush(STDIN_FILENO, TCIFLUSH);
-	if(isatty(STDOUT_FILENO)) tcdrain(STDOUT_FILENO);
-	if(isatty(STDERR_FILENO)) tcdrain(STDERR_FILENO);
-	_exit(EXIT_SUCCESS);
-}
-
-void chk_dbl(void){
-	if(!(sigflags & 0x01)){
-	    sigflags |= 0x01;
-	    alarm(1U);
-	}
-	else clean_exit();
-}
+//void clean_exit(int sig);
+void register_handlers(void);
 
 static inline void helpchk(int argc, char* argv[]){
 	for(int i = 1; i < argc && i <= MAX_POSS_VALID_ARGC; i++){
@@ -49,33 +28,11 @@ static inline void helpchk(int argc, char* argv[]){
 			puts("Try \"info tesla\"");
 			exit(EXIT_SUCCESS);
 		}
+		else if(!strncmp((const char*)(argv[i]), "--version", 9)){
+			puts("`tesla` is still in pre-alpha development");
+			exit(EXIT_SUCCESS);
+		}
 	}
-}
-
-static inline void register_handlers(void){
-	struct sigaction sigstruct;
-	sigset_t blkmask;
-	sigemptyset(&blkmask);
-	sigaddset(&blkmask, SIGALRM);
-	sigaddset(&blkmask, SIGHUP);
-	sigaddset(&blkmask, SIGINT);
-	sigaddset(&blkmask, SIGQUIT);
-	sigaddset(&blkmask, SIGTERM);
-	sigaddset(&blkmask, SIGTSTP);
-	sigstruct.sa_flags = SA_RESTART;
-	sigstruct.sa_mask = blkmask;
-	sigstruct.sa_handler = handl_alrm;
-	if(sigaction(SIGALRM, &sigstruct, NULL) == -1) goto err;
-	sigstruct.sa_handler = clean_exit;
-	if(sigaction(SIGHUP, &sigstruct, NULL) == -1) goto err;
-	if(sigaction(SIGTERM, &sigstruct, NULL) == -1) goto err;
-	sigstruct.sa_handler = chk_dbl;
-	if(sigaction(SIGINT, &sigstruct, NULL) == -1) goto err;
-	if(sigaction(SIGQUIT, &sigstruct, NULL) == -1) goto err;
-	if(sigaction(SIGTSTP, &sigstruct, NULL) == -1) goto err;
-	return;
-err:perror("Signal handler setup failed");
-	exit(EXIT_FAILURE);
 }
 
 static inline uint8_t parse_args(int argc, char* argv[]){
@@ -92,6 +49,14 @@ static inline uint8_t parse_args(int argc, char* argv[]){
 			puts("Default dataset overridden:");
 			puts((const char*)(argv[i] + 10));
 		}
+//For testing: loop infinitely. Uncomment to enable.
+/*		else if(!strncmp((const char*)(argv[i]), "--loop", 6)){
+            puts("NOTICE: entering infinite loop for testing");
+            while(true){
+                ;
+            }
+		}
+*/
 		else if(notify){
 			puts("Unknown arg detected:");
 			puts((const char*)(argv[i]));
