@@ -51,10 +51,10 @@ static inline uint8_t parse_args(int argc, char* argv[]){
 		}
 //For testing: loop infinitely. Uncomment to enable.
 /*		else if(!strncmp((const char*)(argv[i]), "--loop", 6)){
-            puts("NOTICE: entering infinite loop for testing");
-            while(true){
-                ;
-            }
+			puts("NOTICE: entering infinite loop for testing");
+			while(true){
+				;
+			}
 		}
 */
 		else if(notify){
