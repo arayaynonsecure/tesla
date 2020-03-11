@@ -27,7 +27,7 @@ static inline void argchk(int argc, char* argv[]){
 			puts("Try \"info tesla\"");
 			exit(EXIT_SUCCESS);
 		}
-		else if(!strncmp((const char*)(!strncmp((const char*)(argv[i]),
+		else if((const char*)(!strncmp((const char*)(argv[i]),
 		"--version", 9)){
 			puts("`tesla` is still in pre-alpha development");
 			exit(EXIT_SUCCESS);
