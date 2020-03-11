@@ -63,7 +63,3 @@ int main(int argc, char* argv[]){
 	if(argc > 1) parse_args(argc, argv);
 	exit(EXIT_SUCCESS);
 }
-	if(argc > 1) global_flags = parse_args(argc, argv);
-	else puts("No args given, trying default options");
-	exit(EXIT_SUCCESS);
-}
