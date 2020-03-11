@@ -1,4 +1,4 @@
-/*(c) 2019 Aryeh Klempner <arayaydev@gmail.com>
+/*(c) 2019-20 Aryeh Klempner <arayaydev@gmail.com>
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License (GPL) as published by the Free
 Software Foundation, either version 3 of the GPL, or (at your option) any
@@ -10,6 +10,7 @@ have received a copy of the GPL with this program. If not, see
 
 #include <errno.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +18,7 @@ have received a copy of the GPL with this program. If not, see
 #include <unistd.h>
 
 volatile uint8_t sigflags;
+extern uint8_t srv_flags;
 
 void handl_alrm(int sig){
 	sigflags &= 0xFE;
@@ -30,10 +32,10 @@ void clean_exit(int sig){
 }
 
 void chk_dbl(int sig){
-//Bit 0 is a flag whether a tty sig was received in the past second
+//sigflags bit 0 is whether a tty sig was received in the past second
 	if(!(sigflags & 0x01)){
-	    sigflags |= 0x01;
-	    alarm(1U);
+		sigflags |= 0x01;
+		alarm(1U);
 	}
 //Note that we only check # of this sig, so e.g. ^C^Z will stop.
 	else switch(sig){
@@ -50,7 +52,7 @@ void chk_dbl(int sig){
 	}
 }
 
-void register_handlers(void){
+void register_handlers(void){//see `man sigaction` if confused
 	struct sigaction sigstruct;
 	sigset_t blkmask;
 	sigemptyset(&blkmask);
@@ -71,8 +73,8 @@ void register_handlers(void){
 	if(sigaction(SIGINT, &sigstruct, NULL) == -1) goto err;
 	if(sigaction(SIGQUIT, &sigstruct, NULL) == -1) goto err;
 	if(sigaction(SIGTSTP, &sigstruct, NULL) == -1) goto err;
-	puts("All signal handlers set up successfully");
+	if(srv_flags & 0x01) puts("All signal handlers set up successfully");
 	return;
-err:perror("Signal handler setup failed");
+err:if(!(srv_flags & 0x02)) perror("Signal handler setup failed");
 	exit(EXIT_FAILURE);
 }
